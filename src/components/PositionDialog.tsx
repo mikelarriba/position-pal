@@ -6,22 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData } from "@/lib/types";
+import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type Company } from "@/lib/types";
 import { useCreatePosition, useUpdatePosition } from "@/hooks/usePositions";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   position?: Position | null;
+  companies: Company[];
+  preselectedCompanyId?: string | null;
+  preselectedCompanyName?: string | null;
 }
 
-export function PositionDialog({ open, onOpenChange, position }: Props) {
+export function PositionDialog({ open, onOpenChange, position, companies, preselectedCompanyId, preselectedCompanyName }: Props) {
   const create = useCreatePosition();
   const update = useUpdatePosition();
   const isEdit = !!position;
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<PositionFormData>({
     defaultValues: {
+      company_id: "",
       company: "",
       role: "",
       url: "",
@@ -33,6 +37,7 @@ export function PositionDialog({ open, onOpenChange, position }: Props) {
   useEffect(() => {
     if (position) {
       reset({
+        company_id: position.company_id,
         company: position.company,
         role: position.role,
         url: position.url || "",
@@ -40,11 +45,22 @@ export function PositionDialog({ open, onOpenChange, position }: Props) {
         notes: position.notes || "",
       });
     } else {
-      reset({ company: "", role: "", url: "", status: "bookmarked", notes: "" });
+      reset({
+        company_id: preselectedCompanyId || "",
+        company: preselectedCompanyName || "",
+        role: "",
+        url: "",
+        status: "bookmarked",
+        notes: "",
+      });
     }
-  }, [position, reset]);
+  }, [position, reset, preselectedCompanyId, preselectedCompanyName]);
 
   const onSubmit = (data: PositionFormData) => {
+    // Sync company name from selected company
+    const selectedCompany = companies.find((c) => c.id === data.company_id);
+    if (selectedCompany) data.company = selectedCompany.name;
+
     if (isEdit) {
       update.mutate({ id: position!.id, data }, { onSuccess: () => onOpenChange(false) });
     } else {
@@ -61,8 +77,17 @@ export function PositionDialog({ open, onOpenChange, position }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="company">Company</Label>
-              <Input id="company" {...register("company", { required: true })} placeholder="Acme Inc." />
+              <Label>Company</Label>
+              <Select value={watch("company_id")} onValueChange={(v) => setValue("company_id", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select company" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>

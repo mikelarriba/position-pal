@@ -1,5 +1,73 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Position, PositionFormData, PositionStatus } from "./types";
+import type { Position, PositionFormData, PositionStatus, Company, CompanyFormData, CompanyWithPositions } from "./types";
+
+// ─── Companies ───
+
+export async function fetchCompanies(): Promise<Company[]> {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("*")
+    .order("name");
+
+  if (error) throw error;
+  return (data ?? []) as Company[];
+}
+
+export async function fetchCompaniesWithPositions(): Promise<CompanyWithPositions[]> {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("*, positions(*)")
+    .order("name");
+
+  if (error) throw error;
+  return (data ?? []) as CompanyWithPositions[];
+}
+
+export async function createCompany(form: CompanyFormData): Promise<Company> {
+  const { data, error } = await supabase
+    .from("companies")
+    .insert({
+      name: form.name,
+      website: form.website || null,
+      linkedin_url: form.linkedin_url || null,
+      description: form.description || null,
+      size: form.size || null,
+      industry: form.industry || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Company;
+}
+
+export async function updateCompany(id: string, form: Partial<CompanyFormData>): Promise<Company> {
+  const { data, error } = await supabase
+    .from("companies")
+    .update(form)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Company;
+}
+
+export async function deleteCompany(id: string): Promise<void> {
+  const { error } = await supabase.from("companies").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function enrichCompanyData(linkedin_url: string, company_name: string) {
+  const { data, error } = await supabase.functions.invoke("enrich-company", {
+    body: { linkedin_url, company_name },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+// ─── Positions ───
 
 export async function fetchPositions(): Promise<Position[]> {
   const { data, error } = await supabase
@@ -15,6 +83,7 @@ export async function createPosition(form: PositionFormData): Promise<Position> 
   const { data, error } = await supabase
     .from("positions")
     .insert({
+      company_id: form.company_id,
       company: form.company,
       role: form.role,
       url: form.url || null,
@@ -49,10 +118,12 @@ export async function updatePositionStatus(id: string, status: PositionStatus): 
   return updatePosition(id, { status });
 }
 
-// Markdown generation for bidirectional sync
+// ─── Markdown ───
+
 export function positionToMarkdown(p: Position): string {
   return `---
 id: ${p.id}
+company_id: ${p.company_id}
 company: "${p.company}"
 role: "${p.role}"
 status: ${p.status}
@@ -87,6 +158,7 @@ export function parseMarkdownPosition(content: string): Partial<PositionFormData
 
   return {
     id: get('id'),
+    company_id: get('company_id') || '',
     company: get('company') || '',
     role: get('role') || '',
     url: get('url'),

@@ -1,41 +1,79 @@
-import { useState } from "react";
-import { Plus, Briefcase, Search } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Briefcase, Search, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PositionCard } from "@/components/PositionCard";
+import { CompanyCard } from "@/components/CompanyCard";
+import { CompanyDialog } from "@/components/CompanyDialog";
 import { PositionDialog } from "@/components/PositionDialog";
 import { MarkdownExport } from "@/components/MarkdownExport";
 import { CVManager } from "@/components/CVManager";
 import { StatsBar } from "@/components/StatsBar";
-import { usePositions } from "@/hooks/usePositions";
+import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
-import type { Position } from "@/lib/types";
+import type { Position, Company, CompanyWithPositions } from "@/lib/types";
 
 const Index = () => {
-  const { data: positions = [], isLoading } = usePositions();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const { data: companiesWithPositions = [], isLoading } = useCompaniesWithPositions();
+  const { data: allPositions = [] } = usePositions();
+
+  const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
+  const [editCompany, setEditCompany] = useState<Company | null>(null);
+
+  const [positionDialogOpen, setPositionDialogOpen] = useState(false);
   const [editPosition, setEditPosition] = useState<Position | null>(null);
+  const [preselectedCompanyId, setPreselectedCompanyId] = useState<string | null>(null);
+  const [preselectedCompanyName, setPreselectedCompanyName] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const filtered = positions.filter((p) => {
-    const matchesSearch =
-      !search ||
-      p.company.toLowerCase().includes(search.toLowerCase()) ||
-      p.role.toLowerCase().includes(search.toLowerCase());
-    const matchesTab = activeTab === "all" || p.status === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  // Filter companies based on search and status tab
+  const filtered = useMemo(() => {
+    return companiesWithPositions
+      .map((c) => {
+        const filteredPositions = c.positions.filter((p) => {
+          const matchesSearch =
+            !search ||
+            c.name.toLowerCase().includes(search.toLowerCase()) ||
+            p.role.toLowerCase().includes(search.toLowerCase());
+          const matchesTab = activeTab === "all" || p.status === activeTab;
+          return matchesSearch && matchesTab;
+        });
+        return { ...c, positions: filteredPositions };
+      })
+      .filter((c) => {
+        // Show company if it matches search (even with no positions in current tab)
+        // or if it has positions matching current filter
+        const companyMatchesSearch = search && c.name.toLowerCase().includes(search.toLowerCase());
+        return c.positions.length > 0 || (companyMatchesSearch && activeTab === "all");
+      });
+  }, [companiesWithPositions, search, activeTab]);
 
-  const handleEdit = (p: Position) => {
-    setEditPosition(p);
-    setDialogOpen(true);
+  const companies = useMemo(() => companiesWithPositions.map(({ positions, ...c }) => c), [companiesWithPositions]);
+
+  const handleEditCompany = (c: CompanyWithPositions) => {
+    setEditCompany(c);
+    setCompanyDialogOpen(true);
   };
 
-  const handleNew = () => {
+  const handleNewCompany = () => {
+    setEditCompany(null);
+    setCompanyDialogOpen(true);
+  };
+
+  const handleEditPosition = (p: Position) => {
+    setEditPosition(p);
+    setPreselectedCompanyId(null);
+    setPreselectedCompanyName(null);
+    setPositionDialogOpen(true);
+  };
+
+  const handleAddPosition = (companyId: string, companyName: string) => {
     setEditPosition(null);
-    setDialogOpen(true);
+    setPreselectedCompanyId(companyId);
+    setPreselectedCompanyName(companyName);
+    setPositionDialogOpen(true);
   };
 
   return (
@@ -50,28 +88,31 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">Job Tracker</h1>
-                <p className="text-xs text-muted-foreground">Track positions & manage applications</p>
+                <p className="text-xs text-muted-foreground">Track companies & manage applications</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <MarkdownExport positions={positions} />
-              <Button onClick={handleNew} size="sm">
-                <Plus className="h-4 w-4 mr-1" /> Add
+              <MarkdownExport positions={allPositions} />
+              <Button onClick={handleNewCompany} variant="outline" size="sm">
+                <Building2 className="h-4 w-4 mr-1" /> Company
+              </Button>
+              <Button onClick={() => handleAddPosition("", "")} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Position
               </Button>
             </div>
           </div>
-          <StatsBar positions={positions} />
+          <StatsBar positions={allPositions} />
         </div>
       </header>
 
       {/* Main */}
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Search + Filter */}
+        {/* Search */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search positions..."
+              placeholder="Search companies or roles..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -92,16 +133,22 @@ const Index = () => {
               <div className="text-center py-12 text-muted-foreground">Loading...</div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-12">
-                <Briefcase className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground">No positions found</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={handleNew}>
-                  <Plus className="h-4 w-4 mr-1" /> Add your first position
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">No companies found</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={handleNewCompany}>
+                  <Plus className="h-4 w-4 mr-1" /> Add your first company
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {filtered.map((p) => (
-                  <PositionCard key={p.id} position={p} onEdit={handleEdit} />
+              <div className="space-y-4">
+                {filtered.map((c) => (
+                  <CompanyCard
+                    key={c.id}
+                    company={c}
+                    onEditCompany={handleEditCompany}
+                    onEditPosition={handleEditPosition}
+                    onAddPosition={handleAddPosition}
+                  />
                 ))}
               </div>
             )}
@@ -111,11 +158,19 @@ const Index = () => {
         {/* CV Section */}
         <section className="border-t border-border pt-6">
           <h2 className="text-lg font-semibold mb-4 text-foreground">CV Management</h2>
-          <CVManager positions={positions} />
+          <CVManager positions={allPositions} />
         </section>
       </main>
 
-      <PositionDialog open={dialogOpen} onOpenChange={setDialogOpen} position={editPosition} />
+      <CompanyDialog open={companyDialogOpen} onOpenChange={setCompanyDialogOpen} company={editCompany} />
+      <PositionDialog
+        open={positionDialogOpen}
+        onOpenChange={setPositionDialogOpen}
+        position={editPosition}
+        companies={companies}
+        preselectedCompanyId={preselectedCompanyId}
+        preselectedCompanyName={preselectedCompanyName}
+      />
     </div>
   );
 };
