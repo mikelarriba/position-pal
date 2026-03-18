@@ -24,19 +24,21 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
   });
 
   useEffect(() => {
-    if (company) {
-      reset({
-        name: company.name,
-        website: company.website || "",
-        linkedin_url: company.linkedin_url || "",
-        description: company.description || "",
-        size: company.size || "",
-        industry: company.industry || "",
-      });
-    } else {
-      reset({ name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" });
+    if (open) {
+      if (company) {
+        reset({
+          name: company.name,
+          website: company.website || "",
+          linkedin_url: company.linkedin_url || "",
+          description: company.description || "",
+          size: company.size || "",
+          industry: company.industry || "",
+        });
+      } else {
+        reset({ name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" });
+      }
     }
-  }, [company, reset]);
+  }, [open, company, reset]);
 
   const onSubmit = (data: CompanyFormData) => {
     if (isEdit) {
