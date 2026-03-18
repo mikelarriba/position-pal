@@ -18,15 +18,14 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
 
   return (
     <div
-      className="group bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer animate-fade-in"
+      className="group bg-card border border-border rounded-lg p-3 hover:shadow-md transition-all cursor-pointer animate-fade-in"
       onClick={() => onEdit(position)}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-card-foreground truncate">{position.role}</h3>
-          <p className="text-sm text-muted-foreground">{position.company}</p>
+          <h4 className="font-medium text-sm text-card-foreground truncate">{position.role}</h4>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <button className="flex items-center gap-1">
@@ -51,7 +50,7 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
         <span>{formatDistanceToNow(new Date(position.updated_at), { addSuffix: true })}</span>
         {position.url && (
           <a
@@ -78,7 +77,7 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
       </div>
 
       {position.notes && (
-        <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{position.notes}</p>
+        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{position.notes}</p>
       )}
     </div>
   );
