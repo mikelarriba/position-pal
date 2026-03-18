@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Briefcase, Search, Building2 } from "lucide-react";
+import { Plus, Briefcase, Search, Building2, LayoutList, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,14 +9,18 @@ import { PositionDialog } from "@/components/PositionDialog";
 import { MarkdownExport } from "@/components/MarkdownExport";
 import { CVManager } from "@/components/CVManager";
 import { StatsBar } from "@/components/StatsBar";
+import { KanbanBoard } from "@/components/KanbanBoard";
 import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
 import type { Position, Company, CompanyWithPositions } from "@/lib/types";
+
+type ViewMode = "list" | "kanban";
 
 const Index = () => {
   const { data: companiesWithPositions = [], isLoading } = useCompaniesWithPositions();
   const { data: allPositions = [] } = usePositions();
 
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
 
@@ -28,7 +32,6 @@ const Index = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  // Filter companies based on search and status tab
   const filtered = useMemo(() => {
     return companiesWithPositions
       .map((c) => {
@@ -43,12 +46,20 @@ const Index = () => {
         return { ...c, positions: filteredPositions };
       })
       .filter((c) => {
-        // Show company if it matches search (even with no positions in current tab)
-        // or if it has positions matching current filter
         const companyMatchesSearch = search && c.name.toLowerCase().includes(search.toLowerCase());
         return c.positions.length > 0 || (companyMatchesSearch && activeTab === "all");
       });
   }, [companiesWithPositions, search, activeTab]);
+
+  const filteredPositions = useMemo(() => {
+    return allPositions.filter((p) => {
+      const matchesSearch =
+        !search ||
+        p.company.toLowerCase().includes(search.toLowerCase()) ||
+        p.role.toLowerCase().includes(search.toLowerCase());
+      return matchesSearch;
+    });
+  }, [allPositions, search]);
 
   const companies = useMemo(() => companiesWithPositions.map(({ positions, ...c }) => c), [companiesWithPositions]);
 
@@ -78,9 +89,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="container max-w-5xl mx-auto px-4 py-6">
+        <div className="container max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
@@ -105,9 +115,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main */}
-      <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Search */}
+      <main className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* Search + View toggle */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -118,42 +127,66 @@ const Index = () => {
               className="pl-9"
             />
           </div>
+          <div className="flex items-center border border-border rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-2 transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+            >
+              <LayoutList className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("kanban")}
+              className={`p-2 transition-colors ${viewMode === "kanban" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+            >
+              <Columns3 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            {STATUS_ORDER.map((s) => (
-              <TabsTrigger key={s} value={s}>{STATUS_LABELS[s]}</TabsTrigger>
-            ))}
-          </TabsList>
+        {viewMode === "kanban" ? (
+          /* Kanban View */
+          isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">Loading...</div>
+          ) : (
+            <KanbanBoard positions={filteredPositions} onEditPosition={handleEditPosition} />
+          )
+        ) : (
+          /* List View */
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              {STATUS_ORDER.map((s) => (
+                <TabsTrigger key={s} value={s}>{STATUS_LABELS[s]}</TabsTrigger>
+              ))}
+            </TabsList>
 
-          <TabsContent value={activeTab} className="mt-4">
-            {isLoading ? (
-              <div className="text-center py-12 text-muted-foreground">Loading...</div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground">No companies found</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={handleNewCompany}>
-                  <Plus className="h-4 w-4 mr-1" /> Add your first company
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filtered.map((c) => (
-                  <CompanyCard
-                    key={c.id}
-                    company={c}
-                    onEditCompany={handleEditCompany}
-                    onEditPosition={handleEditPosition}
-                    onAddPosition={handleAddPosition}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value={activeTab} className="mt-4">
+              {isLoading ? (
+                <div className="text-center py-12 text-muted-foreground">Loading...</div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-12">
+                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground">No companies found</p>
+                  <Button variant="outline" size="sm" className="mt-3" onClick={handleNewCompany}>
+                    <Plus className="h-4 w-4 mr-1" /> Add your first company
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filtered.map((c) => (
+                    <CompanyCard
+                      key={c.id}
+                      company={c}
+                      onEditCompany={handleEditCompany}
+                      onEditPosition={handleEditPosition}
+                      onAddPosition={handleAddPosition}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
 
         {/* CV Section */}
         <section className="border-t border-border pt-6">
