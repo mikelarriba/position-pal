@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ADD COLUMN archived boolean NOT NULL DEFAULT false;
