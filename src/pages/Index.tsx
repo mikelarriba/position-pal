@@ -65,6 +65,7 @@ const Index = () => {
   }, [allPositions, search]);
 
   const companies = useMemo(() => companiesWithPositions.map(({ positions, ...c }) => c), [companiesWithPositions]);
+  const existingRoles = useMemo(() => allPositions.map((p) => p.role), [allPositions]);
 
   const handleEditCompany = (c: CompanyWithPositions) => {
     setEditCompany(c);
