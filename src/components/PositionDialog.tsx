@@ -19,6 +19,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   position?: Position | null;
   companies: Company[];
+  existingRoles?: string[];
   preselectedCompanyId?: string | null;
   preselectedCompanyName?: string | null;
 }
