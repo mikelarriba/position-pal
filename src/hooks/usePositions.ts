@@ -53,6 +53,18 @@ export function useDeleteCompany() {
   });
 }
 
+export function useArchiveCompany() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, archived }: { id: string; archived: boolean }) => updateCompany(id, { archived }),
+    onSuccess: (_, { archived }) => {
+      qc.invalidateQueries({ queryKey: ["companies-with-positions"] });
+      toast.success(archived ? "Company archived" : "Company unarchived");
+    },
+    onError: (e) => toast.error(`Failed: ${e.message}`),
+  });
+}
+
 export function useEnrichCompany() {
   const qc = useQueryClient();
   return useMutation({
