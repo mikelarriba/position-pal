@@ -20,7 +20,7 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
   const update = useUpdateCompany();
   const isEdit = !!company;
 
-  const { register, handleSubmit, reset } = useForm<CompanyFormData>({
+  const { register, handleSubmit, reset, watch } = useForm<CompanyFormData>({
     defaultValues: { name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" },
   });
 
