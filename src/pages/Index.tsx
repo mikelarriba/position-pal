@@ -46,8 +46,9 @@ const Index = () => {
         return { ...c, positions: filteredPositions };
       })
       .filter((c) => {
-        const companyMatchesSearch = search && c.name.toLowerCase().includes(search.toLowerCase());
-        return c.positions.length > 0 || (companyMatchesSearch && activeTab === "all");
+        if (activeTab !== "all") return c.positions.length > 0;
+        if (!search) return true;
+        return c.positions.length > 0 || c.name.toLowerCase().includes(search.toLowerCase());
       });
   }, [companiesWithPositions, search, activeTab]);
 
