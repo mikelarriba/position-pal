@@ -106,6 +106,7 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <DarkModeToggle />
               <MarkdownExport positions={allPositions} />
               <Button onClick={handleNewCompany} variant="outline" size="sm">
                 <Building2 className="h-4 w-4 mr-1" /> Company
