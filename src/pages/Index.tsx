@@ -144,6 +144,13 @@ const Index = () => {
               <Columns3 className="h-4 w-4" />
             </button>
           </div>
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`p-2 rounded-lg border border-border transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+            title={showArchived ? "Hide archived" : "Show archived"}
+          >
+            <Archive className="h-4 w-4" />
+          </button>
         </div>
 
         {viewMode === "kanban" ? (
