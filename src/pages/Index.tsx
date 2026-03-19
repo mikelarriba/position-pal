@@ -47,6 +47,7 @@ const Index = () => {
         return { ...c, positions: filteredPositions };
       })
       .filter((c) => {
+        if (!showArchived && c.archived) return false;
         if (activeTab !== "all") return c.positions.length > 0;
         if (!search) return true;
         return c.positions.length > 0 || c.name.toLowerCase().includes(search.toLowerCase());
