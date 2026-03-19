@@ -24,7 +24,7 @@ interface Props {
   preselectedCompanyName?: string | null;
 }
 
-export function PositionDialog({ open, onOpenChange, position, companies, preselectedCompanyId, preselectedCompanyName }: Props) {
+export function PositionDialog({ open, onOpenChange, position, companies, existingRoles = [], preselectedCompanyId, preselectedCompanyName }: Props) {
   const create = useCreatePosition();
   const update = useUpdatePosition();
   const createCompany = useCreateCompany();
