@@ -8,6 +8,7 @@ export interface Company {
   description: string | null;
   size: string | null;
   industry: string | null;
+  archived: boolean;
   created_at: string;
   updated_at: string;
 }
