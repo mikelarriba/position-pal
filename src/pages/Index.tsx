@@ -31,6 +31,7 @@ const Index = () => {
 
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
 
   const filtered = useMemo(() => {
     return companiesWithPositions
