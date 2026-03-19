@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Briefcase, Search, Building2, LayoutList, Columns3 } from "lucide-react";
+import { Plus, Briefcase, Search, Building2, LayoutList, Columns3, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
