@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PositionCard } from "./PositionCard";
 import { StatusBadge } from "./StatusBadge";
+import { CompanyTimeline } from "./CompanyTimeline";
 import { useDeleteCompany, useEnrichCompany, useArchiveCompany } from "@/hooks/usePositions";
 import type { CompanyWithPositions, Position } from "@/lib/types";
 
@@ -27,7 +28,6 @@ export function CompanyCard({ company, onEditCompany, onEditPosition, onAddPosit
 
   return (
     <div className={`border border-border rounded-lg bg-card overflow-hidden animate-fade-in ${company.archived ? "opacity-60" : ""}`}>
-      {/* Company Header */}
       <div
         className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => setExpanded(!expanded)}
@@ -142,6 +142,9 @@ export function CompanyCard({ company, onEditCompany, onEditPosition, onAddPosit
           </Button>
         </div>
       )}
+
+      {/* Company-level communications timeline */}
+      {expanded && <CompanyTimeline companyId={company.id} />}
     </div>
   );
 }
