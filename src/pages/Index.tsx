@@ -10,6 +10,7 @@ import { MarkdownExport } from "@/components/MarkdownExport";
 import { CVManager } from "@/components/CVManager";
 import { StatsBar } from "@/components/StatsBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
 import type { Position, Company, CompanyWithPositions } from "@/lib/types";
