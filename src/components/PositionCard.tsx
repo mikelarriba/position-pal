@@ -12,9 +12,22 @@ interface PositionCardProps {
   onEdit: (p: Position) => void;
 }
 
+function formatSalary(min: number | null, max: number | null, currency: string | null) {
+  const cur = currency || "EUR";
+  const fmt = (n: number) => {
+    if (n >= 1000) return `${Math.round(n / 1000)}k`;
+    return n.toString();
+  };
+  if (min && max) return `${fmt(min)}-${fmt(max)} ${cur}`;
+  if (min) return `${fmt(min)}+ ${cur}`;
+  if (max) return `up to ${fmt(max)} ${cur}`;
+  return null;
+}
+
 export function PositionCard({ position, onEdit }: PositionCardProps) {
   const updateStatus = useUpdateStatus();
   const deletePos = useDeletePosition();
+  const salary = formatSalary(position.salary_min, position.salary_max, position.salary_currency);
 
   return (
     <div
@@ -24,6 +37,9 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-sm text-card-foreground truncate">{position.role}</h4>
+          {position.description && (
+            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{position.description}</p>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <DropdownMenu>
@@ -52,6 +68,7 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
 
       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
         <span>{formatDistanceToNow(new Date(position.updated_at), { addSuffix: true })}</span>
+        {salary && <span className="text-primary font-medium">{salary}</span>}
         {position.url && (
           <a
             href={position.url}
@@ -75,10 +92,6 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
-
-      {position.notes && (
-        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{position.notes}</p>
-      )}
     </div>
   );
 }

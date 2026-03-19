@@ -1,24 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Position, PositionFormData, PositionStatus, Company, CompanyFormData, CompanyWithPositions } from "./types";
+import type { Position, PositionFormData, PositionStatus, Company, CompanyFormData, CompanyWithPositions, Communication, CommunicationFormData } from "./types";
 
 // ─── Companies ───
 
 export async function fetchCompanies(): Promise<Company[]> {
-  const { data, error } = await supabase
-    .from("companies")
-    .select("*")
-    .order("name");
-
+  const { data, error } = await supabase.from("companies").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Company[];
 }
 
 export async function fetchCompaniesWithPositions(): Promise<CompanyWithPositions[]> {
-  const { data, error } = await supabase
-    .from("companies")
-    .select("*, positions(*)")
-    .order("name");
-
+  const { data, error } = await supabase.from("companies").select("*, positions(*)").order("name");
   if (error) throw error;
   return (data ?? []) as CompanyWithPositions[];
 }
@@ -36,19 +28,12 @@ export async function createCompany(form: CompanyFormData): Promise<Company> {
     })
     .select()
     .single();
-
   if (error) throw error;
   return data as Company;
 }
 
 export async function updateCompany(id: string, form: Partial<CompanyFormData>): Promise<Company> {
-  const { data, error } = await supabase
-    .from("companies")
-    .update(form)
-    .eq("id", id)
-    .select()
-    .single();
-
+  const { data, error } = await supabase.from("companies").update(form).eq("id", id).select().single();
   if (error) throw error;
   return data as Company;
 }
@@ -62,7 +47,6 @@ export async function enrichCompanyData(linkedin_url: string, company_name: stri
   const { data, error } = await supabase.functions.invoke("enrich-company", {
     body: { linkedin_url, company_name },
   });
-
   if (error) throw error;
   return data;
 }
@@ -70,11 +54,7 @@ export async function enrichCompanyData(linkedin_url: string, company_name: stri
 // ─── Positions ───
 
 export async function fetchPositions(): Promise<Position[]> {
-  const { data, error } = await supabase
-    .from("positions")
-    .select("*")
-    .order("updated_at", { ascending: false });
-
+  const { data, error } = await supabase.from("positions").select("*").order("updated_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Position[];
 }
@@ -89,22 +69,19 @@ export async function createPosition(form: PositionFormData): Promise<Position> 
       url: form.url || null,
       status: form.status,
       notes: form.notes || null,
+      description: form.description || null,
+      salary_min: form.salary_min ?? null,
+      salary_max: form.salary_max ?? null,
+      salary_currency: form.salary_currency || 'EUR',
     })
     .select()
     .single();
-
   if (error) throw error;
   return data as Position;
 }
 
 export async function updatePosition(id: string, form: Partial<PositionFormData>): Promise<Position> {
-  const { data, error } = await supabase
-    .from("positions")
-    .update(form)
-    .eq("id", id)
-    .select()
-    .single();
-
+  const { data, error } = await supabase.from("positions").update(form).eq("id", id).select().single();
   if (error) throw error;
   return data as Position;
 }
@@ -116,6 +93,68 @@ export async function deletePosition(id: string): Promise<void> {
 
 export async function updatePositionStatus(id: string, status: PositionStatus): Promise<Position> {
   return updatePosition(id, { status });
+}
+
+export async function enrichPositionData(url: string, role: string) {
+  const { data, error } = await supabase.functions.invoke("enrich-position", {
+    body: { url, role },
+  });
+  if (error) throw error;
+  return data;
+}
+
+// ─── Communications ───
+
+export async function fetchCommunications(positionId: string): Promise<Communication[]> {
+  const { data, error } = await supabase
+    .from("position_communications")
+    .select("*")
+    .eq("position_id", positionId)
+    .order("occurred_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Communication[];
+}
+
+export async function fetchCompanyCommunications(companyId: string): Promise<(Communication & { position_role: string })[]> {
+  // Get all positions for this company, then get their communications
+  const { data: positions, error: posError } = await supabase
+    .from("positions")
+    .select("id, role")
+    .eq("company_id", companyId);
+  if (posError) throw posError;
+  if (!positions || positions.length === 0) return [];
+
+  const positionIds = positions.map((p) => p.id);
+  const { data, error } = await supabase
+    .from("position_communications")
+    .select("*")
+    .in("position_id", positionIds)
+    .order("occurred_at", { ascending: true });
+  if (error) throw error;
+
+  const roleMap = Object.fromEntries(positions.map((p) => [p.id, p.role]));
+  return (data ?? []).map((c) => ({ ...c, position_role: roleMap[c.position_id] || "Unknown" })) as any;
+}
+
+export async function createCommunication(form: CommunicationFormData): Promise<Communication> {
+  const { data, error } = await supabase
+    .from("position_communications")
+    .insert({
+      position_id: form.position_id,
+      message_type: form.message_type,
+      author: form.author,
+      content: form.content,
+      occurred_at: form.occurred_at || new Date().toISOString(),
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Communication;
+}
+
+export async function deleteCommunication(id: string): Promise<void> {
+  const { error } = await supabase.from("position_communications").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ─── Markdown ───

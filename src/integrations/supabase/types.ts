@@ -53,14 +53,56 @@ export type Database = {
         }
         Relationships: []
       }
+      position_communications: {
+        Row: {
+          author: string
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          occurred_at: string
+          position_id: string
+        }
+        Insert: {
+          author?: string
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          occurred_at?: string
+          position_id: string
+        }
+        Update: {
+          author?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          occurred_at?: string
+          position_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_communications_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           company: string
           company_id: string
           created_at: string
+          description: string | null
           id: string
           notes: string | null
           role: string
+          salary_currency: string | null
+          salary_max: number | null
+          salary_min: number | null
           status: Database["public"]["Enums"]["position_status"]
           updated_at: string
           url: string | null
@@ -69,9 +111,13 @@ export type Database = {
           company: string
           company_id: string
           created_at?: string
+          description?: string | null
           id?: string
           notes?: string | null
           role: string
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
           status?: Database["public"]["Enums"]["position_status"]
           updated_at?: string
           url?: string | null
@@ -80,9 +126,13 @@ export type Database = {
           company?: string
           company_id?: string
           created_at?: string
+          description?: string | null
           id?: string
           notes?: string | null
           role?: string
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
           status?: Database["public"]["Enums"]["position_status"]
           updated_at?: string
           url?: string | null

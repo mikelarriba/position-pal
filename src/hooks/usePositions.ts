@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchPositions, createPosition, updatePosition, deletePosition, updatePositionStatus,
   fetchCompaniesWithPositions, createCompany, updateCompany, deleteCompany, enrichCompanyData,
+  fetchCommunications, createCommunication, deleteCommunication, fetchCompanyCommunications,
+  enrichPositionData,
 } from "@/lib/positions";
-import type { PositionFormData, PositionStatus, CompanyFormData } from "@/lib/types";
+import type { PositionFormData, PositionStatus, CompanyFormData, CommunicationFormData } from "@/lib/types";
 import { toast } from "sonner";
 
 // ─── Companies ───
@@ -140,6 +142,70 @@ export function useUpdateStatus() {
       qc.invalidateQueries({ queryKey: ["positions"] });
       qc.invalidateQueries({ queryKey: ["companies-with-positions"] });
       toast.success("Status updated");
+    },
+    onError: (e) => toast.error(`Failed: ${e.message}`),
+  });
+}
+
+export function useEnrichPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, url, role }: { id: string; url: string; role: string }) =>
+      enrichPositionData(url, role).then(async (result) => {
+        if (result.success && result.data) {
+          await updatePosition(id, result.data);
+        }
+        return result;
+      }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ["positions"] });
+      qc.invalidateQueries({ queryKey: ["companies-with-positions"] });
+      if (result.success) toast.success("Position enriched with AI data");
+      else toast.error(result.error || "Enrichment failed");
+    },
+    onError: (e) => toast.error(`Enrichment failed: ${e.message}`),
+  });
+}
+
+// ─── Communications ───
+
+export function useCommunications(positionId: string | undefined) {
+  return useQuery({
+    queryKey: ["communications", positionId],
+    queryFn: () => fetchCommunications(positionId!),
+    enabled: !!positionId,
+  });
+}
+
+export function useCompanyCommunications(companyId: string | undefined) {
+  return useQuery({
+    queryKey: ["company-communications", companyId],
+    queryFn: () => fetchCompanyCommunications(companyId!),
+    enabled: !!companyId,
+  });
+}
+
+export function useCreateCommunication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (form: CommunicationFormData) => createCommunication(form),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["communications", data.position_id] });
+      qc.invalidateQueries({ queryKey: ["company-communications"] });
+      toast.success("Message added");
+    },
+    onError: (e) => toast.error(`Failed: ${e.message}`),
+  });
+}
+
+export function useDeleteCommunication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteCommunication(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["communications"] });
+      qc.invalidateQueries({ queryKey: ["company-communications"] });
+      toast.success("Message deleted");
     },
     onError: (e) => toast.error(`Failed: ${e.message}`),
   });
