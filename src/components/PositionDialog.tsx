@@ -155,7 +155,7 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
             <div className="space-y-2">
               <Label htmlFor="url">URL</Label>
               <div className="flex gap-1">
-                <Input id="url" {...register("url")} placeholder="https://..." className="flex-1" />
+                <UrlInput id="url" {...register("url")} value={watch("url") || ""} placeholder="https://..." className="flex-1" />
                 {isEdit && watch("url") && (
                   <Button
                     type="button"
