@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UrlInput } from "@/components/UrlInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useCreateCompany, useUpdateCompany } from "@/hooks/usePositions";
@@ -19,7 +20,7 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
   const update = useUpdateCompany();
   const isEdit = !!company;
 
-  const { register, handleSubmit, reset } = useForm<CompanyFormData>({
+  const { register, handleSubmit, reset, watch } = useForm<CompanyFormData>({
     defaultValues: { name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" },
   });
 
@@ -68,11 +69,11 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="website">Website</Label>
-              <Input id="website" {...register("website")} placeholder="https://acme.com" />
+              <UrlInput id="website" {...register("website")} value={watch("website") || ""} placeholder="https://acme.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-              <Input id="linkedin_url" {...register("linkedin_url")} placeholder="https://linkedin.com/company/acme" />
+              <UrlInput id="linkedin_url" {...register("linkedin_url")} value={watch("linkedin_url") || ""} placeholder="https://linkedin.com/company/acme" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

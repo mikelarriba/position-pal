@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UrlInput } from "@/components/UrlInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -154,7 +155,7 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
             <div className="space-y-2">
               <Label htmlFor="url">URL</Label>
               <div className="flex gap-1">
-                <Input id="url" {...register("url")} placeholder="https://..." className="flex-1" />
+                <UrlInput id="url" {...register("url")} value={watch("url") || ""} placeholder="https://..." className="flex-1" />
                 {isEdit && watch("url") && (
                   <Button
                     type="button"
