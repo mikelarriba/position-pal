@@ -141,8 +141,12 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Input id="role" {...register("role", { required: true })} placeholder="Senior Engineer" />
+              <Label>Role</Label>
+              <RoleSearchInput
+                roles={existingRoles}
+                value={watch("role")}
+                onChange={(v) => setValue("role", v)}
+              />
             </div>
           </div>
 
