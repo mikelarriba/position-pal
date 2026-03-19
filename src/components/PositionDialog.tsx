@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Loader2 } from "lucide-react";
 import { CompanySearchInput } from "@/components/CompanySearchInput";
+import { RoleSearchInput } from "@/components/RoleSearchInput";
 import { CommunicationThread } from "@/components/CommunicationThread";
 import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type Company } from "@/lib/types";
 import { useCreatePosition, useUpdatePosition, useCreateCompany, useEnrichPosition } from "@/hooks/usePositions";
@@ -18,11 +19,12 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   position?: Position | null;
   companies: Company[];
+  existingRoles?: string[];
   preselectedCompanyId?: string | null;
   preselectedCompanyName?: string | null;
 }
 
-export function PositionDialog({ open, onOpenChange, position, companies, preselectedCompanyId, preselectedCompanyName }: Props) {
+export function PositionDialog({ open, onOpenChange, position, companies, existingRoles = [], preselectedCompanyId, preselectedCompanyName }: Props) {
   const create = useCreatePosition();
   const update = useUpdatePosition();
   const createCompany = useCreateCompany();
@@ -139,8 +141,12 @@ export function PositionDialog({ open, onOpenChange, position, companies, presel
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Input id="role" {...register("role", { required: true })} placeholder="Senior Engineer" />
+              <Label>Role</Label>
+              <RoleSearchInput
+                roles={existingRoles}
+                value={watch("role")}
+                onChange={(v) => setValue("role", v)}
+              />
             </div>
           </div>
 
