@@ -8,6 +8,7 @@ export interface Company {
   description: string | null;
   size: string | null;
   industry: string | null;
+  archived: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +40,7 @@ export interface CompanyFormData {
   description?: string;
   size?: string;
   industry?: string;
+  archived?: boolean;
 }
 
 export interface PositionFormData {

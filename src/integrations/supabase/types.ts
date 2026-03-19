@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       companies: {
         Row: {
+          archived: boolean
           created_at: string
           description: string | null
           id: string
@@ -27,6 +28,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          archived?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -38,6 +40,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          archived?: boolean
           created_at?: string
           description?: string | null
           id?: string

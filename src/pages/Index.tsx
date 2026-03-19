@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Briefcase, Search, Building2, LayoutList, Columns3 } from "lucide-react";
+import { Plus, Briefcase, Search, Building2, LayoutList, Columns3, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,7 @@ const Index = () => {
 
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [showArchived, setShowArchived] = useState(false);
 
   const filtered = useMemo(() => {
     return companiesWithPositions
@@ -46,6 +47,7 @@ const Index = () => {
         return { ...c, positions: filteredPositions };
       })
       .filter((c) => {
+        if (!showArchived && c.archived) return false;
         if (activeTab !== "all") return c.positions.length > 0;
         if (!search) return true;
         return c.positions.length > 0 || c.name.toLowerCase().includes(search.toLowerCase());
@@ -142,6 +144,13 @@ const Index = () => {
               <Columns3 className="h-4 w-4" />
             </button>
           </div>
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`p-2 rounded-lg border border-border transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+            title={showArchived ? "Hide archived" : "Show archived"}
+          >
+            <Archive className="h-4 w-4" />
+          </button>
         </div>
 
         {viewMode === "kanban" ? (
