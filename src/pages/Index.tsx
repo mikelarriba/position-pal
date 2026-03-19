@@ -212,6 +212,7 @@ const Index = () => {
         onOpenChange={setPositionDialogOpen}
         position={editPosition}
         companies={companies}
+        existingRoles={existingRoles}
         preselectedCompanyId={preselectedCompanyId}
         preselectedCompanyName={preselectedCompanyName}
       />
