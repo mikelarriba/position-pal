@@ -40,6 +40,7 @@ export interface CompanyFormData {
   description?: string;
   size?: string;
   industry?: string;
+  archived?: boolean;
 }
 
 export interface PositionFormData {
