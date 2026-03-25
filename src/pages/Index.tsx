@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Briefcase, Search, Building2, LayoutList, Columns3, Archive } from "lucide-react";
+import { Plus, Briefcase, Search, Building2, LayoutList, Columns3, Archive, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { CompanyDialog } from "@/components/CompanyDialog";
 import { PositionDialog } from "@/components/PositionDialog";
 import { MarkdownExport } from "@/components/MarkdownExport";
 import { CVManager } from "@/components/CVManager";
+import { CVLog } from "@/components/CVLog";
 import { StatsBar } from "@/components/StatsBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -205,6 +206,14 @@ const Index = () => {
         <section className="border-t border-border pt-6">
           <h2 className="text-lg font-semibold mb-4 text-foreground">CV Management</h2>
           <CVManager positions={allPositions} />
+        </section>
+
+        {/* CV Log */}
+        <section className="border-t border-border pt-6">
+          <h2 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
+            <FileText className="h-5 w-5" /> CV Log
+          </h2>
+          <CVLog companies={companiesWithPositions} />
         </section>
       </main>
 

@@ -11,6 +11,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { CompanySearchInput } from "@/components/CompanySearchInput";
 import { RoleSearchInput } from "@/components/RoleSearchInput";
 import { CommunicationThread } from "@/components/CommunicationThread";
+import { PositionCVUpload } from "@/components/PositionCVUpload";
 import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type Company } from "@/lib/types";
 import { useCreatePosition, useUpdatePosition, useCreateCompany, useEnrichPosition } from "@/hooks/usePositions";
 import { formatDistanceToNow } from "date-fns";
@@ -228,6 +229,13 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
             </Button>
           </div>
         </form>
+
+        {/* CV attachments - only show for existing positions */}
+        {isEdit && position && (
+          <div className="border-t border-border pt-4">
+            <PositionCVUpload positionId={position.id} />
+          </div>
+        )}
 
         {/* Communications thread - only show for existing positions */}
         {isEdit && position && (
