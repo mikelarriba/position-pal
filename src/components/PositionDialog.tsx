@@ -98,7 +98,18 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
     const url = watch("url");
     const role = watch("role");
     if (!url || !position) return;
-    enrich.mutate({ id: position.id, url, role });
+    enrich.mutate({ id: position.id, url, role }, {
+      onSuccess: (result) => {
+        if (result.success && result.data) {
+          // Update form fields with enriched data so the user sees them immediately
+          if (result.data.description) setValue("description", result.data.description);
+          if (result.data.notes) setValue("notes", result.data.notes);
+          if (result.data.salary_min) setValue("salary_min", result.data.salary_min);
+          if (result.data.salary_max) setValue("salary_max", result.data.salary_max);
+          if (result.data.salary_currency) setValue("salary_currency", result.data.salary_currency);
+        }
+      },
+    });
   };
 
   const onSubmit = (data: PositionFormData) => {
