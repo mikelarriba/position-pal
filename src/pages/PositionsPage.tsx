@@ -7,7 +7,6 @@ import { CompanyCard } from "@/components/CompanyCard";
 import { CompanyDialog } from "@/components/CompanyDialog";
 import { PositionDialog } from "@/components/PositionDialog";
 import { MarkdownExport } from "@/components/MarkdownExport";
-import { StatsBar } from "@/components/StatsBar";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
@@ -91,17 +90,14 @@ const PositionsPage = () => {
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
       {/* Header actions */}
-      <div className="flex items-center justify-between">
-        <StatsBar positions={allPositions} />
-        <div className="flex items-center gap-2 shrink-0">
-          <MarkdownExport positions={allPositions} />
-          <Button onClick={handleNewCompany} variant="outline" size="sm">
-            <Building2 className="h-4 w-4 mr-1" /> Company
-          </Button>
-          <Button onClick={() => handleAddPosition("", "")} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Position
-          </Button>
-        </div>
+      <div className="flex items-center justify-end gap-2">
+        <MarkdownExport positions={allPositions} />
+        <Button onClick={handleNewCompany} variant="outline" size="sm">
+          <Building2 className="h-4 w-4 mr-1" /> Company
+        </Button>
+        <Button onClick={() => handleAddPosition("", "")} size="sm">
+          <Plus className="h-4 w-4 mr-1" /> Position
+        </Button>
       </div>
 
       {/* Search + View toggle */}
@@ -147,10 +143,13 @@ const PositionsPage = () => {
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            {STATUS_ORDER.map((s) => (
-              <TabsTrigger key={s} value={s}>{STATUS_LABELS[s]}</TabsTrigger>
-            ))}
+            <TabsTrigger value="all">All ({allPositions.length})</TabsTrigger>
+            {STATUS_ORDER.map((s) => {
+              const count = allPositions.filter((p) => p.status === s).length;
+              return (
+                <TabsTrigger key={s} value={s}>{STATUS_LABELS[s]} ({count})</TabsTrigger>
+              );
+            })}
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
