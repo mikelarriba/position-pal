@@ -66,10 +66,6 @@ const PositionsPage = () => {
     setCompanyDialogOpen(true);
   };
 
-  const handleNewCompany = () => {
-    setEditCompany(null);
-    setCompanyDialogOpen(true);
-  };
 
   const handleEditPosition = (p: Position) => {
     setEditPosition(p);
