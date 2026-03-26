@@ -211,7 +211,6 @@ export function downloadPositionMarkdown(p: Position): void {
 export function downloadAllPositionMarkdowns(positions: Position[]): void {
   positions.forEach((p) => downloadPositionMarkdown(p));
 }
-}
 
 export function parseMarkdownPosition(content: string): Partial<PositionFormData> & { id?: string } {
   const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
