@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyCard } from "@/components/CompanyCard";
 import { CompanyDialog } from "@/components/CompanyDialog";
-import { PositionDialog } from "@/components/PositionDialog";
+import { PositionDetailPanel } from "@/components/PositionDetailPanel";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
@@ -19,13 +19,15 @@ const PositionsPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
-  const [positionDialogOpen, setPositionDialogOpen] = useState(false);
-  const [editPosition, setEditPosition] = useState<Position | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [preselectedCompanyId, setPreselectedCompanyId] = useState<string | null>(null);
   const [preselectedCompanyName, setPreselectedCompanyName] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [showArchived, setShowArchived] = useState(false);
+
+  const panelOpen = !!selectedPosition || isCreating;
 
   const filtered = useMemo(() => {
     return companiesWithPositions
@@ -66,111 +68,124 @@ const PositionsPage = () => {
     setCompanyDialogOpen(true);
   };
 
-
   const handleEditPosition = (p: Position) => {
-    setEditPosition(p);
-    setPreselectedCompanyId(null);
-    setPreselectedCompanyName(null);
-    setPositionDialogOpen(true);
+    setSelectedPosition(p);
+    setIsCreating(false);
   };
 
   const handleAddPosition = (companyId: string, companyName: string) => {
-    setEditPosition(null);
+    setSelectedPosition(null);
+    setIsCreating(true);
     setPreselectedCompanyId(companyId);
     setPreselectedCompanyName(companyName);
-    setPositionDialogOpen(true);
+  };
+
+  const handleClosePanel = () => {
+    setSelectedPosition(null);
+    setIsCreating(false);
+    setPreselectedCompanyId(null);
+    setPreselectedCompanyName(null);
   };
 
   return (
-    <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
+      {/* Master list */}
+      <div className={`flex-1 overflow-y-auto transition-all duration-300 ${panelOpen ? "mr-0" : ""}`}>
+        <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
+          {/* Search + View toggle */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search companies or roles..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex items-center border border-border rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              >
+                <LayoutList className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={`p-2 transition-colors ${viewMode === "kanban" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              >
+                <Columns3 className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              onClick={() => setShowArchived(!showArchived)}
+              className={`p-2 rounded-lg border border-border transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              title={showArchived ? "Hide archived" : "Show archived"}
+            >
+              <Archive className="h-4 w-4" />
+            </button>
+          </div>
 
-      {/* Search + View toggle */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search companies or roles..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+          {viewMode === "kanban" ? (
+            isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading...</div>
+            ) : (
+              <KanbanBoard positions={filteredPositions} onEditPosition={handleEditPosition} />
+            )
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="all">All ({allPositions.length})</TabsTrigger>
+                {STATUS_ORDER.map((s) => {
+                  const count = allPositions.filter((p) => p.status === s).length;
+                  return (
+                    <TabsTrigger key={s} value={s}>{STATUS_LABELS[s]} ({count})</TabsTrigger>
+                  );
+                })}
+              </TabsList>
+
+              <TabsContent value={activeTab} className="mt-4">
+                {isLoading ? (
+                  <div className="text-center py-12 text-muted-foreground">Loading...</div>
+                ) : filtered.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground">No positions found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filtered.map((c) => (
+                      <CompanyCard
+                        key={c.id}
+                        company={c}
+                        onEditCompany={handleEditCompany}
+                        onEditPosition={handleEditPosition}
+                        onAddPosition={handleAddPosition}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
-        <div className="flex items-center border border-border rounded-lg overflow-hidden">
-          <button
-            onClick={() => setViewMode("list")}
-            className={`p-2 transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
-          >
-            <LayoutList className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("kanban")}
-            className={`p-2 transition-colors ${viewMode === "kanban" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
-          >
-            <Columns3 className="h-4 w-4" />
-          </button>
-        </div>
-        <button
-          onClick={() => setShowArchived(!showArchived)}
-          className={`p-2 rounded-lg border border-border transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
-          title={showArchived ? "Hide archived" : "Show archived"}
-        >
-          <Archive className="h-4 w-4" />
-        </button>
       </div>
 
-      {viewMode === "kanban" ? (
-        isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading...</div>
-        ) : (
-          <KanbanBoard positions={filteredPositions} onEditPosition={handleEditPosition} />
-        )
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All ({allPositions.length})</TabsTrigger>
-            {STATUS_ORDER.map((s) => {
-              const count = allPositions.filter((p) => p.status === s).length;
-              return (
-                <TabsTrigger key={s} value={s}>{STATUS_LABELS[s]} ({count})</TabsTrigger>
-              );
-            })}
-          </TabsList>
-
-          <TabsContent value={activeTab} className="mt-4">
-            {isLoading ? (
-              <div className="text-center py-12 text-muted-foreground">Loading...</div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground">No positions found</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filtered.map((c) => (
-                  <CompanyCard
-                    key={c.id}
-                    company={c}
-                    onEditCompany={handleEditCompany}
-                    onEditPosition={handleEditPosition}
-                    onAddPosition={handleAddPosition}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+      {/* Detail panel */}
+      {panelOpen && (
+        <div className="w-[420px] shrink-0 h-full animate-fade-in">
+          <PositionDetailPanel
+            position={selectedPosition}
+            companies={companies}
+            existingRoles={existingRoles}
+            preselectedCompanyId={preselectedCompanyId}
+            preselectedCompanyName={preselectedCompanyName}
+            onClose={handleClosePanel}
+          />
+        </div>
       )}
 
       <CompanyDialog open={companyDialogOpen} onOpenChange={setCompanyDialogOpen} company={editCompany} />
-      <PositionDialog
-        open={positionDialogOpen}
-        onOpenChange={setPositionDialogOpen}
-        position={editPosition}
-        companies={companies}
-        existingRoles={existingRoles}
-        preselectedCompanyId={preselectedCompanyId}
-        preselectedCompanyName={preselectedCompanyName}
-      />
     </div>
   );
 };

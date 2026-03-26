@@ -1,0 +1,280 @@
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { UrlInput } from "@/components/UrlInput";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sparkles, Loader2, Download, X } from "lucide-react";
+import { CompanySearchInput } from "@/components/CompanySearchInput";
+import { RoleSearchInput } from "@/components/RoleSearchInput";
+import { CommunicationThread } from "@/components/CommunicationThread";
+import { PositionCVUpload } from "@/components/PositionCVUpload";
+import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type Company } from "@/lib/types";
+import { useCreatePosition, useUpdatePosition, useCreateCompany, useEnrichPosition } from "@/hooks/usePositions";
+import { downloadPositionMarkdown } from "@/lib/positions";
+import { formatDistanceToNow } from "date-fns";
+
+interface Props {
+  position?: Position | null;
+  companies: Company[];
+  existingRoles?: string[];
+  preselectedCompanyId?: string | null;
+  preselectedCompanyName?: string | null;
+  onClose: () => void;
+}
+
+export function PositionDetailPanel({ position, companies, existingRoles = [], preselectedCompanyId, preselectedCompanyName, onClose }: Props) {
+  const create = useCreatePosition();
+  const update = useUpdatePosition();
+  const createCompany = useCreateCompany();
+  const enrich = useEnrichPosition();
+  const isEdit = !!position;
+
+  const { register, handleSubmit, reset, setValue, watch } = useForm<PositionFormData>({
+    defaultValues: {
+      company_id: "",
+      company: "",
+      role: "",
+      url: "",
+      status: "bookmarked",
+      notes: "",
+      description: "",
+      salary_min: null,
+      salary_max: null,
+      salary_currency: "EUR",
+    },
+  });
+
+  useEffect(() => {
+    if (position) {
+      reset({
+        company_id: position.company_id,
+        company: position.company,
+        role: position.role,
+        url: position.url || "",
+        status: position.status,
+        notes: position.notes || "",
+        description: position.description || "",
+        salary_min: position.salary_min,
+        salary_max: position.salary_max,
+        salary_currency: position.salary_currency || "EUR",
+      });
+    } else {
+      reset({
+        company_id: preselectedCompanyId || "",
+        company: preselectedCompanyName || "",
+        role: "",
+        url: "",
+        status: "bookmarked",
+        notes: "",
+        description: "",
+        salary_min: null,
+        salary_max: null,
+        salary_currency: "EUR",
+      });
+    }
+  }, [position, reset, preselectedCompanyId, preselectedCompanyName]);
+
+  const handleCompanySelect = (companyId: string, companyName: string) => {
+    setValue("company_id", companyId);
+    setValue("company", companyName);
+  };
+
+  const handleCreateCompany = (name: string) => {
+    createCompany.mutate({ name }, {
+      onSuccess: (newCompany) => {
+        setValue("company_id", newCompany.id);
+        setValue("company", newCompany.name);
+      },
+    });
+  };
+
+  const handleEnrich = () => {
+    const url = watch("url");
+    const role = watch("role");
+    if (!url || !position) return;
+    enrich.mutate({ id: position.id, url, role }, {
+      onSuccess: (result) => {
+        if (result.success && result.data) {
+          if (result.data.description) setValue("description", result.data.description);
+          if (result.data.notes) setValue("notes", result.data.notes);
+          if (result.data.salary_min) setValue("salary_min", result.data.salary_min);
+          if (result.data.salary_max) setValue("salary_max", result.data.salary_max);
+          if (result.data.salary_currency) setValue("salary_currency", result.data.salary_currency);
+        }
+      },
+    });
+  };
+
+  const onSubmit = (data: PositionFormData) => {
+    const selectedCompany = companies.find((c) => c.id === data.company_id);
+    if (selectedCompany) data.company = selectedCompany.name;
+
+    if (!data.salary_min) data.salary_min = null;
+    if (!data.salary_max) data.salary_max = null;
+
+    if (isEdit) {
+      update.mutate({ id: position!.id, data }, { onSuccess: () => onClose() });
+    } else {
+      create.mutate(data, { onSuccess: () => onClose() });
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col border-l border-border bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        <div className="min-w-0">
+          <h2 className="font-semibold text-foreground truncate">
+            {isEdit ? "Edit Position" : "New Position"}
+            {isEdit && position?.short_id && (
+              <span className="ml-2 text-xs font-mono text-muted-foreground">#{position.short_id}</span>
+            )}
+          </h2>
+          {isEdit && position && (
+            <p className="text-xs text-muted-foreground">
+              Created {formatDistanceToNow(new Date(position.created_at), { addSuffix: true })}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {isEdit && position && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => downloadPositionMarkdown(position)}
+              title="Download markdown file"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Scrollable content */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Company</Label>
+              <CompanySearchInput
+                companies={companies}
+                selectedCompanyId={watch("company_id")}
+                selectedCompanyName={watch("company")}
+                onSelect={handleCompanySelect}
+                onCreate={handleCreateCompany}
+                isCreating={createCompany.isPending}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <RoleSearchInput
+                roles={existingRoles}
+                value={watch("role")}
+                onChange={(v) => setValue("role", v)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="url">URL</Label>
+              <div className="flex gap-1">
+                <UrlInput id="url" {...register("url")} value={watch("url") || ""} placeholder="https://..." className="flex-1" />
+                {isEdit && watch("url") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    disabled={enrich.isPending}
+                    onClick={handleEnrich}
+                    title="Enrich from URL with AI"
+                  >
+                    {enrich.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={watch("status")} onValueChange={(v) => setValue("status", v as any)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_ORDER.map((s) => (
+                    <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" {...register("description")} rows={3} placeholder="Job description, requirements..." />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="salary_min">Min</Label>
+                <Input id="salary_min" type="number" {...register("salary_min", { valueAsNumber: true })} placeholder="40000" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="salary_max">Max</Label>
+                <Input id="salary_max" type="number" {...register("salary_max", { valueAsNumber: true })} placeholder="60000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cur.</Label>
+                <Select value={watch("salary_currency") || "EUR"} onValueChange={(v) => setValue("salary_currency", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CHF">CHF</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea id="notes" {...register("notes")} rows={3} placeholder="Requirements, contacts, thoughts..." />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+              <Button type="submit" size="sm" disabled={create.isPending || update.isPending}>
+                {isEdit ? "Save" : "Create"}
+              </Button>
+            </div>
+          </form>
+
+          {/* CV attachments */}
+          {isEdit && position && (
+            <div className="border-t border-border pt-4">
+              <PositionCVUpload positionId={position.id} />
+            </div>
+          )}
+
+          {/* Communications thread */}
+          {isEdit && position && (
+            <div className="border-t border-border pt-4">
+              <CommunicationThread positionId={position.id} />
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
