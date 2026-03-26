@@ -36,7 +36,10 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-sm text-card-foreground truncate">{position.role}</h4>
+          <h4 className="font-medium text-sm text-card-foreground truncate">
+            {position.short_id && <span className="text-muted-foreground font-mono mr-1.5">#{position.short_id}</span>}
+            {position.role}
+          </h4>
           {position.description && (
             <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{position.description}</p>
           )}

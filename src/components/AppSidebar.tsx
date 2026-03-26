@@ -1,4 +1,4 @@
-import { Briefcase, Building2, FileText } from "lucide-react";
+import { Briefcase, Building2, FileText, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ const items = [
   { title: "Positions", url: "/", icon: Briefcase },
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "CV Tracking", url: "/cvs", icon: FileText },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
