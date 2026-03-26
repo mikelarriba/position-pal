@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import { Plus, Briefcase, Search, Building2, LayoutList, Columns3, Archive } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Building2, LayoutList, Columns3, Archive } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyCard } from "@/components/CompanyCard";
 import { CompanyDialog } from "@/components/CompanyDialog";
 import { PositionDialog } from "@/components/PositionDialog";
-import { MarkdownExport } from "@/components/MarkdownExport";
+import { KanbanBoard } from "@/components/KanbanBoard";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
@@ -89,16 +89,6 @@ const PositionsPage = () => {
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
-      {/* Header actions */}
-      <div className="flex items-center justify-end gap-2">
-        <MarkdownExport positions={allPositions} />
-        <Button onClick={handleNewCompany} variant="outline" size="sm">
-          <Building2 className="h-4 w-4 mr-1" /> Company
-        </Button>
-        <Button onClick={() => handleAddPosition("", "")} size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Position
-        </Button>
-      </div>
 
       {/* Search + View toggle */}
       <div className="flex items-center gap-4">
