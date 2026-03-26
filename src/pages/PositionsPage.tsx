@@ -1,12 +1,10 @@
 import { useState, useMemo } from "react";
 import { Search, Building2, LayoutList, Columns3, Archive } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyCard } from "@/components/CompanyCard";
 import { CompanyDialog } from "@/components/CompanyDialog";
 import { PositionDialog } from "@/components/PositionDialog";
-import { KanbanBoard } from "@/components/KanbanBoard";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { useCompaniesWithPositions, usePositions } from "@/hooks/usePositions";
 import { STATUS_ORDER, STATUS_LABELS } from "@/lib/types";
@@ -148,10 +146,7 @@ const PositionsPage = () => {
             ) : filtered.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground">No companies found</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={handleNewCompany}>
-                  <Plus className="h-4 w-4 mr-1" /> Add your first company
-                </Button>
+                <p className="text-muted-foreground">No positions found</p>
               </div>
             ) : (
               <div className="space-y-4">
