@@ -160,26 +160,56 @@ export async function deleteCommunication(id: string): Promise<void> {
 // ─── Markdown ───
 
 export function positionToMarkdown(p: Position): string {
+  const fileId = p.short_id || p.id.slice(0, 4);
   return `---
 id: ${p.id}
+short_id: ${fileId}
 company_id: ${p.company_id}
 company: "${p.company}"
 role: "${p.role}"
 status: ${p.status}
 url: "${p.url || ''}"
+salary_min: ${p.salary_min ?? ''}
+salary_max: ${p.salary_max ?? ''}
+salary_currency: ${p.salary_currency || 'EUR'}
 created_at: ${p.created_at}
 updated_at: ${p.updated_at}
 ---
 
 # ${p.role} @ ${p.company}
 
+**ID:** ${fileId}
 **Status:** ${p.status}
 ${p.url ? `**URL:** [Link](${p.url})` : ''}
+${p.salary_min || p.salary_max ? `**Salary:** ${p.salary_min ?? '?'} - ${p.salary_max ?? '?'} ${p.salary_currency || 'EUR'}` : ''}
+
+## Description
+
+${p.description || '_No description yet._'}
 
 ## Notes
 
 ${p.notes || '_No notes yet._'}
 `;
+}
+
+export function positionFileName(p: Position): string {
+  return `pos${p.short_id || p.id.slice(0, 4)}.md`;
+}
+
+export function downloadPositionMarkdown(p: Position): void {
+  const markdown = positionToMarkdown(p);
+  const blob = new Blob([markdown], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = positionFileName(p);
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadAllPositionMarkdowns(positions: Position[]): void {
+  positions.forEach((p) => downloadPositionMarkdown(p));
 }
 
 export function parseMarkdownPosition(content: string): Partial<PositionFormData> & { id?: string } {

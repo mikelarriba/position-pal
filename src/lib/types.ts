@@ -17,6 +17,7 @@ export interface Company {
 
 export interface Position {
   id: string;
+  short_id: string | null;
   company_id: string;
   company: string;
   role: string;

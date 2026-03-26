@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           archived: boolean
@@ -141,6 +165,7 @@ export type Database = {
           salary_currency: string | null
           salary_max: number | null
           salary_min: number | null
+          short_id: string | null
           status: Database["public"]["Enums"]["position_status"]
           updated_at: string
           url: string | null
@@ -156,6 +181,7 @@ export type Database = {
           salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
+          short_id?: string | null
           status?: Database["public"]["Enums"]["position_status"]
           updated_at?: string
           url?: string | null
@@ -171,6 +197,7 @@ export type Database = {
           salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
+          short_id?: string | null
           status?: Database["public"]["Enums"]["position_status"]
           updated_at?: string
           url?: string | null

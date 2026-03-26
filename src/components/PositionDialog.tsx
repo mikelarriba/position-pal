@@ -7,13 +7,14 @@ import { UrlInput } from "@/components/UrlInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Download } from "lucide-react";
 import { CompanySearchInput } from "@/components/CompanySearchInput";
 import { RoleSearchInput } from "@/components/RoleSearchInput";
 import { CommunicationThread } from "@/components/CommunicationThread";
 import { PositionCVUpload } from "@/components/PositionCVUpload";
 import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type Company } from "@/lib/types";
 import { useCreatePosition, useUpdatePosition, useCreateCompany, useEnrichPosition } from "@/hooks/usePositions";
+import { downloadPositionMarkdown } from "@/lib/positions";
 import { formatDistanceToNow } from "date-fns";
 
 interface Props {
@@ -132,12 +133,31 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>{isEdit ? "Edit Position" : "Add Position"}</span>
-            {isEdit && position && (
-              <span className="text-xs font-normal text-muted-foreground">
-                Created {formatDistanceToNow(new Date(position.created_at), { addSuffix: true })}
-              </span>
-            )}
+            <span>
+              {isEdit ? "Edit Position" : "Add Position"}
+              {isEdit && position?.short_id && (
+                <span className="ml-2 text-xs font-mono text-muted-foreground">#{position.short_id}</span>
+              )}
+            </span>
+            <div className="flex items-center gap-2">
+              {isEdit && position && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => downloadPositionMarkdown(position)}
+                  title="Download markdown file"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
+              {isEdit && position && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  Created {formatDistanceToNow(new Date(position.created_at), { addSuffix: true })}
+                </span>
+              )}
+            </div>
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
