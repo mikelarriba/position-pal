@@ -22,9 +22,14 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
   const enrich = useEnrichCompany();
   const isEdit = !!company;
 
+  const { register, handleSubmit, reset, watch, setValue } = useForm<CompanyFormData>({
+    defaultValues: { name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" },
+  });
+
   const handleEnrich = () => {
-    if (!company?.linkedin_url) return;
-    enrich.mutate({ id: company.id, linkedin_url: company.linkedin_url, name: company.name }, {
+    const linkedinUrl = watch("linkedin_url");
+    if (!linkedinUrl || !company) return;
+    enrich.mutate({ id: company.id, linkedin_url: linkedinUrl, name: company.name }, {
       onSuccess: (result) => {
         if (result.success && result.data) {
           if (result.data.description) setValue("description", result.data.description);
@@ -34,10 +39,6 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
       },
     });
   };
-
-  const { register, handleSubmit, reset, watch, setValue } = useForm<CompanyFormData>({
-    defaultValues: { name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" },
-  });
 
   useEffect(() => {
     if (open) {
