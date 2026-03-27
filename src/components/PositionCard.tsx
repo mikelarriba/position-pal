@@ -1,4 +1,5 @@
-import { ExternalLink, Trash2, ChevronDown } from "lucide-react";
+import { ExternalLink, Trash2, ChevronDown, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "./StatusBadge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -10,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 interface PositionCardProps {
   position: Position;
   onEdit: (p: Position) => void;
+  isActive?: boolean;
 }
 
 function formatSalary(min: number | null, max: number | null, currency: string | null) {
@@ -24,14 +26,15 @@ function formatSalary(min: number | null, max: number | null, currency: string |
   return null;
 }
 
-export function PositionCard({ position, onEdit }: PositionCardProps) {
+export function PositionCard({ position, onEdit, isActive }: PositionCardProps) {
+  const navigate = useNavigate();
   const updateStatus = useUpdateStatus();
   const deletePos = useDeletePosition();
   const salary = formatSalary(position.salary_min, position.salary_max, position.salary_currency);
 
   return (
     <div
-      className="group bg-card border border-border rounded-lg p-3 hover:shadow-md transition-all cursor-pointer animate-fade-in"
+      className={`group bg-card border rounded-lg p-3 hover:shadow-md transition-all cursor-pointer animate-fade-in ${isActive ? "border-primary ring-1 ring-primary/20" : "border-border"}`}
       onClick={() => onEdit(position)}
     >
       <div className="flex items-start justify-between gap-2">
@@ -40,9 +43,16 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
             {position.short_id && <span className="text-muted-foreground font-mono mr-1.5">#{position.short_id}</span>}
             {position.role}
           </h4>
-          {position.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{position.description}</p>
-          )}
+          <button
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors mt-0.5"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/companies/${position.company_id}`);
+            }}
+          >
+            <Building2 className="h-3 w-3" />
+            {position.company}
+          </button>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <DropdownMenu>
@@ -68,6 +78,10 @@ export function PositionCard({ position, onEdit }: PositionCardProps) {
           </DropdownMenu>
         </div>
       </div>
+
+      {position.description && (
+        <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{position.description}</p>
+      )}
 
       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
         <span>{formatDistanceToNow(new Date(position.updated_at), { addSuffix: true })}</span>
