@@ -1,11 +1,11 @@
-import { Building2, ExternalLink, Linkedin, ChevronDown, ChevronRight, Trash2, Sparkles, Loader2, Plus, Pencil, Archive, MoreHorizontal } from "lucide-react";
+import { Building2, ExternalLink, Linkedin, ChevronDown, ChevronRight, Trash2, Plus, Pencil, Archive, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PositionCard } from "./PositionCard";
 import { StatusBadge } from "./StatusBadge";
 import { CompanyTimeline } from "./CompanyTimeline";
-import { useDeleteCompany, useEnrichCompany, useArchiveCompany } from "@/hooks/usePositions";
+import { useDeleteCompany, useArchiveCompany } from "@/hooks/usePositions";
 import type { CompanyWithPositions, Position } from "@/lib/types";
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 export function CompanyCard({ company, onEditCompany, onEditPosition, onAddPosition }: Props) {
   const [expanded, setExpanded] = useState(true);
   const deleteCompany = useDeleteCompany();
-  const enrich = useEnrichCompany();
+  
   const archive = useArchiveCompany();
 
   const statusCounts = company.positions.reduce((acc, p) => {
@@ -84,11 +84,6 @@ export function CompanyCard({ company, onEditCompany, onEditPosition, onAddPosit
               <Plus className="h-3.5 w-3.5" />
             </Button>
 
-            {company.linkedin_url && (
-              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={enrich.isPending} onClick={(e) => { e.stopPropagation(); enrich.mutate({ id: company.id, linkedin_url: company.linkedin_url!, name: company.name }); }}>
-                {enrich.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              </Button>
-            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

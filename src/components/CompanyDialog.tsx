@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { UrlInput } from "@/components/UrlInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useCreateCompany, useUpdateCompany } from "@/hooks/usePositions";
+import { Sparkles, Loader2 } from "lucide-react";
+import { useCreateCompany, useUpdateCompany, useEnrichCompany } from "@/hooks/usePositions";
 import type { Company, CompanyFormData } from "@/lib/types";
 
 interface Props {
@@ -18,9 +19,23 @@ interface Props {
 export function CompanyDialog({ open, onOpenChange, company }: Props) {
   const create = useCreateCompany();
   const update = useUpdateCompany();
+  const enrich = useEnrichCompany();
   const isEdit = !!company;
 
-  const { register, handleSubmit, reset, watch } = useForm<CompanyFormData>({
+  const handleEnrich = () => {
+    if (!company?.linkedin_url) return;
+    enrich.mutate({ id: company.id, linkedin_url: company.linkedin_url, name: company.name }, {
+      onSuccess: (result) => {
+        if (result.success && result.data) {
+          if (result.data.description) setValue("description", result.data.description);
+          if (result.data.industry) setValue("industry", result.data.industry);
+          if (result.data.size) setValue("size", result.data.size);
+        }
+      },
+    });
+  };
+
+  const { register, handleSubmit, reset, watch, setValue } = useForm<CompanyFormData>({
     defaultValues: { name: "", website: "", linkedin_url: "", description: "", size: "", industry: "" },
   });
 
@@ -73,7 +88,22 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-              <UrlInput id="linkedin_url" {...register("linkedin_url")} value={watch("linkedin_url") || ""} placeholder="https://linkedin.com/company/acme" />
+              <div className="flex gap-1">
+                <UrlInput id="linkedin_url" {...register("linkedin_url")} value={watch("linkedin_url") || ""} placeholder="https://linkedin.com/company/acme" className="flex-1" />
+                {isEdit && watch("linkedin_url") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    disabled={enrich.isPending}
+                    onClick={handleEnrich}
+                    title="Enrich from LinkedIn with AI"
+                  >
+                    {enrich.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
