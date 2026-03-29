@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ExternalLink, Building2, Trash2, ChevronDown } from "lucide-react";
+import { ExternalLink, Building2, Trash2, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "./StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,9 @@ interface PositionsTableProps {
   activePositionId?: string | null;
 }
 
+type SortKey = "role" | "company" | "status" | "updated_at";
+type SortDir = "asc" | "desc";
+
 function formatSalary(min: number | null, max: number | null, currency: string | null) {
   const cur = currency || "EUR";
   const fmt = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : n.toString());
@@ -24,10 +28,51 @@ function formatSalary(min: number | null, max: number | null, currency: string |
   return "—";
 }
 
+function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
+  if (!active) return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
+  return dir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
+}
+
 export function PositionsTable({ positions, onEditPosition, activePositionId }: PositionsTableProps) {
   const navigate = useNavigate();
   const updateStatus = useUpdateStatus();
   const deletePos = useDeletePosition();
+  const [sortKey, setSortKey] = useState<SortKey>("updated_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "updated_at" ? "desc" : "asc");
+    }
+  };
+
+  const sorted = [...positions].sort((a, b) => {
+    let cmp = 0;
+    switch (sortKey) {
+      case "role":
+        cmp = a.role.localeCompare(b.role);
+        break;
+      case "company":
+        cmp = a.company.localeCompare(b.company);
+        break;
+      case "status":
+        cmp = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+        break;
+      case "updated_at":
+        cmp = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        break;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const sortableHeaders: { key: SortKey; label: string }[] = [
+    { key: "role", label: "Role" },
+    { key: "company", label: "Company" },
+    { key: "status", label: "Status" },
+  ];
 
   return (
     <div className="border border-border rounded-lg overflow-hidden">
@@ -35,16 +80,32 @@ export function PositionsTable({ positions, onEditPosition, activePositionId }: 
         <TableHeader>
           <TableRow className="bg-muted/30">
             <TableHead className="w-[60px]">ID</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Company</TableHead>
-            <TableHead>Status</TableHead>
+            {sortableHeaders.map(({ key, label }) => (
+              <TableHead key={key}>
+                <button
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                  onClick={() => toggleSort(key)}
+                >
+                  {label}
+                  <SortIcon active={sortKey === key} dir={sortDir} />
+                </button>
+              </TableHead>
+            ))}
             <TableHead>Salary</TableHead>
-            <TableHead>Updated</TableHead>
+            <TableHead>
+              <button
+                className="flex items-center gap-1 hover:text-foreground transition-colors"
+                onClick={() => toggleSort("updated_at")}
+              >
+                Updated
+                <SortIcon active={sortKey === "updated_at"} dir={sortDir} />
+              </button>
+            </TableHead>
             <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {positions.map((p) => (
+          {sorted.map((p) => (
             <TableRow
               key={p.id}
               className={`cursor-pointer transition-colors ${activePositionId === p.id ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/50"}`}
