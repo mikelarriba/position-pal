@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { FileText, ExternalLink, Search } from "lucide-react";
+import { FileText, ExternalLink, Search, Eye } from "lucide-react";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -167,6 +168,7 @@ export function CVLog({ companies }: Props) {
                   <span>{formatDistanceToNow(new Date(cv.created_at), { addSuffix: true })}</span>
                 </div>
               </div>
+              <DocumentViewer url={getPublicUrl(cv.file_path)} fileName={cv.file_name} />
               <a
                 href={getPublicUrl(cv.file_path)}
                 target="_blank"

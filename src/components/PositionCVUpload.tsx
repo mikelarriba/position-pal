@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Upload, FileText, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { Upload, FileText, Trash2, Loader2, ExternalLink, Eye } from "lucide-react";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -143,6 +144,7 @@ export function PositionCVUpload({ positionId }: Props) {
                   {formatFileSize(cv.file_size)} · {formatDistanceToNow(new Date(cv.created_at), { addSuffix: true })}
                 </span>
               </div>
+              <DocumentViewer url={getPublicUrl(cv.file_path)} fileName={cv.file_name} />
               <a
                 href={getPublicUrl(cv.file_path)}
                 target="_blank"
