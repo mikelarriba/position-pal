@@ -98,19 +98,33 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
   const handleEnrich = () => {
     const url = watch("url");
     const role = watch("role");
-    if (!url || !position) return;
-    enrich.mutate({ id: position.id, url, role }, {
-      onSuccess: (result) => {
-        if (result.success && result.data) {
-          // Update form fields with enriched data so the user sees them immediately
-          if (result.data.description) setValue("description", result.data.description);
-          if (result.data.notes) setValue("notes", result.data.notes);
-          if (result.data.salary_min) setValue("salary_min", result.data.salary_min);
-          if (result.data.salary_max) setValue("salary_max", result.data.salary_max);
-          if (result.data.salary_currency) setValue("salary_currency", result.data.salary_currency);
-        }
-      },
-    });
+    if (!url) return;
+    if (isEdit && position) {
+      enrich.mutate({ id: position.id, url, role }, {
+        onSuccess: (result) => {
+          if (result.success && result.data) {
+            if (result.data.description) setValue("description", result.data.description);
+            if (result.data.notes) setValue("notes", result.data.notes);
+            if (result.data.salary_min) setValue("salary_min", result.data.salary_min);
+            if (result.data.salary_max) setValue("salary_max", result.data.salary_max);
+            if (result.data.salary_currency) setValue("salary_currency", result.data.salary_currency);
+          }
+        },
+      });
+    } else {
+      // For creation: enrich form fields only without saving
+      enrich.mutate({ id: "__new__", url, role }, {
+        onSuccess: (result) => {
+          if (result.success && result.data) {
+            if (result.data.description) setValue("description", result.data.description);
+            if (result.data.notes) setValue("notes", result.data.notes);
+            if (result.data.salary_min) setValue("salary_min", result.data.salary_min);
+            if (result.data.salary_max) setValue("salary_max", result.data.salary_max);
+            if (result.data.salary_currency) setValue("salary_currency", result.data.salary_currency);
+          }
+        },
+      });
+    }
   };
 
   const onSubmit = (data: PositionFormData) => {
@@ -188,7 +202,7 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
               <Label htmlFor="url">URL</Label>
               <div className="flex gap-1">
                 <UrlInput id="url" {...register("url")} value={watch("url") || ""} placeholder="https://..." className="flex-1" />
-                {isEdit && watch("url") && (
+                {watch("url") && (
                   <Button
                     type="button"
                     variant="outline"
