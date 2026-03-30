@@ -72,7 +72,7 @@ export function useEnrichCompany() {
   return useMutation({
     mutationFn: ({ id, linkedin_url, name }: { id: string; linkedin_url: string; name: string }) =>
       enrichCompanyData(linkedin_url, name).then(async (result) => {
-        if (result.success && result.data) {
+        if (result.success && result.data && id !== "__new__") {
           await updateCompany(id, result.data);
         }
         return result;
@@ -152,7 +152,7 @@ export function useEnrichPosition() {
   return useMutation({
     mutationFn: ({ id, url, role }: { id: string; url: string; role: string }) =>
       enrichPositionData(url, role).then(async (result) => {
-        if (result.success && result.data) {
+        if (result.success && result.data && id !== "__new__") {
           await updatePosition(id, result.data);
         }
         return result;

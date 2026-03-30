@@ -28,8 +28,10 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
 
   const handleEnrich = () => {
     const linkedinUrl = watch("linkedin_url");
-    if (!linkedinUrl || !company) return;
-    enrich.mutate({ id: company.id, linkedin_url: linkedinUrl, name: company.name }, {
+    const name = watch("name");
+    if (!linkedinUrl) return;
+    const enrichId = isEdit ? company!.id : "__new__";
+    enrich.mutate({ id: enrichId, linkedin_url: linkedinUrl, name: name || "Unknown" }, {
       onSuccess: (result) => {
         if (result.success && result.data) {
           if (result.data.description) setValue("description", result.data.description);
@@ -91,7 +93,7 @@ export function CompanyDialog({ open, onOpenChange, company }: Props) {
               <Label htmlFor="linkedin_url">LinkedIn URL</Label>
               <div className="flex gap-1">
                 <UrlInput id="linkedin_url" {...register("linkedin_url")} value={watch("linkedin_url") || ""} placeholder="https://linkedin.com/company/acme" className="flex-1" />
-                {isEdit && watch("linkedin_url") && (
+                {watch("linkedin_url") && (
                   <Button
                     type="button"
                     variant="outline"

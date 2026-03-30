@@ -202,7 +202,7 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
               <Label htmlFor="url">URL</Label>
               <div className="flex gap-1">
                 <UrlInput id="url" {...register("url")} value={watch("url") || ""} placeholder="https://..." className="flex-1" />
-                {isEdit && watch("url") && (
+                {watch("url") && (
                   <Button
                     type="button"
                     variant="outline"
