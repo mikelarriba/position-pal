@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, LayoutList, Columns3, TableProperties, Archive } from "lucide-react";
+import { Search, LayoutList, Columns3, TableProperties, Archive, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PositionCard } from "@/components/PositionCard";
