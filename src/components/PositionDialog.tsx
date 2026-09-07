@@ -16,6 +16,7 @@ import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type
 import { useCreatePosition, useUpdatePosition, useCreateCompany, useEnrichPosition } from "@/hooks/usePositions";
 import { downloadPositionMarkdown } from "@/lib/positions";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -131,9 +132,19 @@ export function PositionDialog({ open, onOpenChange, position, companies, existi
     const selectedCompany = companies.find((c) => c.id === data.company_id);
     if (selectedCompany) data.company = selectedCompany.name;
 
+    if (!data.company_id) {
+      toast.error("Please select or create a company first");
+      return;
+    }
+    if (!data.role?.trim()) {
+      toast.error("Please enter a role");
+      return;
+    }
+
     // Clean salary values
-    if (!data.salary_min) data.salary_min = null;
-    if (!data.salary_max) data.salary_max = null;
+    if (data.salary_min == null || Number.isNaN(data.salary_min)) data.salary_min = null;
+    if (data.salary_max == null || Number.isNaN(data.salary_max)) data.salary_max = null;
+
 
     if (isEdit) {
       update.mutate({ id: position!.id, data }, { onSuccess: () => onOpenChange(false) });
