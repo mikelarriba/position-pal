@@ -59,7 +59,10 @@ export async function fetchPositions(): Promise<Position[]> {
   return (data ?? []) as Position[];
 }
 
+const num = (v: unknown) => (v == null || v === "" || Number.isNaN(Number(v)) ? null : Number(v));
+
 export async function createPosition(form: PositionFormData): Promise<Position> {
+  if (!form.company_id) throw new Error("A company must be selected");
   const { data, error } = await supabase
     .from("positions")
     .insert({
