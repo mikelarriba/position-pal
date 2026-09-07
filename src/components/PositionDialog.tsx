@@ -16,6 +16,7 @@ import { STATUS_LABELS, STATUS_ORDER, type Position, type PositionFormData, type
 import { useCreatePosition, useUpdatePosition, useCreateCompany, useEnrichPosition } from "@/hooks/usePositions";
 import { downloadPositionMarkdown } from "@/lib/positions";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
