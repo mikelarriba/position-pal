@@ -73,8 +73,8 @@ export async function createPosition(form: PositionFormData): Promise<Position> 
       status: form.status,
       notes: form.notes || null,
       description: form.description || null,
-      salary_min: form.salary_min ?? null,
-      salary_max: form.salary_max ?? null,
+      salary_min: num(form.salary_min),
+      salary_max: num(form.salary_max),
       salary_currency: form.salary_currency || 'EUR',
     })
     .select()
@@ -84,7 +84,12 @@ export async function createPosition(form: PositionFormData): Promise<Position> 
 }
 
 export async function updatePosition(id: string, form: Partial<PositionFormData>): Promise<Position> {
-  const { data, error } = await supabase.from("positions").update(form).eq("id", id).select().single();
+  const payload: Record<string, unknown> = { ...form };
+  if ("salary_min" in payload) payload.salary_min = num(payload.salary_min);
+  if ("salary_max" in payload) payload.salary_max = num(payload.salary_max);
+  if ("company_id" in payload && !payload.company_id) delete payload.company_id;
+  if ("url" in payload && !payload.url) payload.url = null;
+  const { data, error } = await supabase.from("positions").update(payload).eq("id", id).select().single();
   if (error) throw error;
   return data as Position;
 }
